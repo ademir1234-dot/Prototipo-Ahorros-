@@ -7,8 +7,8 @@ Producto Mínimo Viable (MVP)
 
 La fase inicial del proyecto se centra en resolver dos necesidades críticas de alto valor, seleccionadas como prioritarias para nuestro MVP:
 
-* ** Funcionamiento Offline:** La aplicación funciona de manera completamente local. Los usarios pueden registrar sus transacciones mediante notas de voz directamente desde su comunidad en cualquier momento, sin depender de una conexión a internet.
-* ** Reporte anual automatizado:** Los administradores del grupo de ahorro pueden generar y visualizar un resumen consolidado de todos los socios al final del año. Esto elimina la necesidad de revisar cuadernos manualmente y agiliza la toma de decisiones para la distribución de ganancias.
+*  Funcionamiento Offline:* La aplicación funciona de manera completamente local. Los usarios pueden registrar sus transacciones mediante notas de voz directamente desde su comunidad en cualquier momento, sin depender de una conexión a internet.
+*  Reporte anual automatizado:* Los administradores del grupo de ahorro pueden generar y visualizar un resumen consolidado de todos los socios al final del año. Esto elimina la necesidad de revisar cuadernos manualmente y agiliza la toma de decisiones para la distribución de ganancias.
 
 ##  Roadmap (Próximas características)
 
