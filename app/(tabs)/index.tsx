@@ -1,44 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-// Importar SQLite SOLO en móvil
-let SQLite = null;
-let db = null;
-if (Platform.OS !== 'web') {
-  SQLite = require('expo-sqlite');
-  db = SQLite.openDatabaseSync('vozcoop.db');
-}
-
-// Storage unificado
-const storage = {
-  init() {
-    if (Platform.OS !== 'web') {
-      db.execSync(
-        'CREATE TABLE IF NOT EXISTS transacciones (id INTEGER PRIMARY KEY AUTOINCREMENT, miembro TEXT, monto REAL, tipo TEXT, fecha TEXT)'
-      );
-    }
-  },
-  getAll() {
-    if (Platform.OS === 'web') {
-      try {
-        return JSON.parse(localStorage.getItem('transacciones') || '[]');
-      } catch { return []; }
-    }
-    return db.getAllSync('SELECT * FROM transacciones ORDER BY id DESC');
-  },
-  insert(miembro, monto, tipo, fecha) {
-    if (Platform.OS === 'web') {
-      const data = this.getAll();
-      const nueva = { id: Date.now(), miembro, monto, tipo, fecha };
-      localStorage.setItem('transacciones', JSON.stringify([nueva, ...data]));
-    } else {
-      db.runSync(
-        'INSERT INTO transacciones (miembro, monto, tipo, fecha) VALUES (?, ?, ?, ?)',
-        [miembro, monto, tipo, fecha]
-      );
-    }
-  }
-};
+import { storage } from '../../storage.web';
 
 export default function Index() {
   const [transcripcion, setTranscripcion] = useState('');
@@ -89,33 +51,55 @@ export default function Index() {
     setEscuchando(false);
   };
 
+  const normalizar = (texto) =>
+    texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   const procesarTexto = (texto) => {
     if (!texto.trim()) { Alert.alert('Error', 'No se captó texto.'); return; }
 
-    const lowerText = texto.toLowerCase();
-    let tipo = '';
-    let miembro = 'Desconocido';
-    let monto = 0.0;
-
-    if (lowerText.includes('ahorr')) tipo = 'Ahorro';
-    else if (lowerText.includes('prest') || lowerText.includes('préstamo')) tipo = 'Préstamo';
-    else if (lowerText.includes('interes') || lowerText.includes('interés')) tipo = 'Interés';
-
-    const matchMonto = lowerText.match(/\d+(\.\d+)?/);
-    if (matchMonto) monto = parseFloat(matchMonto[0]);
+    const keywords = ['ahorro', 'ahorro', 'ahorrar', 'presto', 'presto', 'prestamo',
+                      'prestamo', 'interes', 'interes'];
 
     const palabras = texto.trim().split(' ');
-    if (palabras.length > 0) {
-      miembro = palabras[0].charAt(0).toUpperCase() + palabras[0].slice(1);
+    let indicePalabra = -1;
+
+    for (let i = 0; i < palabras.length; i++) {
+      const palabraNorm = normalizar(palabras[i]);
+      if (keywords.some(k => palabraNorm.includes(k))) {
+        indicePalabra = i;
+        break;
+      }
     }
 
+    let miembro = 'Desconocido';
+    if (indicePalabra > 0) {
+      miembro = palabras.slice(0, indicePalabra)
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+        .join(' ');
+    }
+
+    // Normalizar nombre para agrupar correctamente
+    const miembroNorm = normalizar(miembro)
+      .split(' ')
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ');
+
+    const lowerText = normalizar(texto);
+    let tipo = '';
+    if (lowerText.includes('ahorr')) tipo = 'Ahorro';
+    else if (lowerText.includes('prest')) tipo = 'Préstamo';
+    else if (lowerText.includes('interes')) tipo = 'Interés';
+
+    const matchMonto = lowerText.match(/\d+(\.\d+)?/);
+    const monto = matchMonto ? parseFloat(matchMonto[0]) : 0;
+
     if (tipo !== '' && monto > 0) {
-      storage.insert(miembro, monto, tipo, new Date().toLocaleDateString('es-SV'));
-      Alert.alert('✅ Guardado', `${tipo} de $${monto} para ${miembro}`);
+      storage.insert(miembroNorm, monto, tipo, new Date().toLocaleDateString('es-SV'));
+      Alert.alert('✅ Guardado', `${tipo} de $${monto} para ${miembroNorm}`);
       setTranscripcion('');
       actualizarHistorial();
     } else {
-      Alert.alert('No entendido', `Se escuchó:\n"${texto}"\n\nIntenta:\n"María ahorro 50"`);
+      Alert.alert('No entendido', `Se escuchó:\n"${texto}"\n\nIntenta:\n"Oscar Pérez ahorro 50"`);
     }
   };
 
