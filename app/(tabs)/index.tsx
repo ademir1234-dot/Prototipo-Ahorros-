@@ -1,3 +1,4 @@
+import * as Speech from 'expo-speech';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { storage } from '../../storage.web';
@@ -16,6 +17,19 @@ export default function Index() {
   const actualizarHistorial = () => {
     setHistorial(storage.getAll());
   };
+
+  const leerHistorial = () => {
+    if (historial.length === 0) {
+      Speech.speak('No hay transacciones registradas aún.', { language: 'es-MX' });
+      return;
+    }
+    const texto = historial.slice(0, 5).map(item =>
+      `${item.miembro} tiene un ${item.tipo} de ${item.monto} dólares del ${item.fecha}.`
+    ).join(' ');
+    Speech.speak(`Tienes ${historial.length} transacciones. ${texto}`, { language: 'es-MX' });
+  };
+
+  const detenerLectura = () => Speech.stop();
 
   const iniciarEscucha = () => {
     if (Platform.OS !== 'web') {
@@ -57,9 +71,7 @@ export default function Index() {
   const procesarTexto = (texto) => {
     if (!texto.trim()) { Alert.alert('Error', 'No se captó texto.'); return; }
 
-    const keywords = ['ahorro', 'ahorro', 'ahorrar', 'presto', 'presto', 'prestamo',
-                      'prestamo', 'interes', 'interes'];
-
+    const keywords = ['ahorro', 'ahorrar', 'presto', 'prestamo', 'interes'];
     const palabras = texto.trim().split(' ');
     let indicePalabra = -1;
 
@@ -78,7 +90,6 @@ export default function Index() {
         .join(' ');
     }
 
-    // Normalizar nombre para agrupar correctamente
     const miembroNorm = normalizar(miembro)
       .split(' ')
       .map(p => p.charAt(0).toUpperCase() + p.slice(1))
@@ -141,6 +152,16 @@ export default function Index() {
         )}
       </View>
 
+      {/* Botones de lectura en voz alta */}
+      <View style={styles.botonesLectura}>
+        <TouchableOpacity style={styles.botonLeer} onPress={leerHistorial}>
+          <Text style={styles.botonLeerTexto}>🔊 Leer Historial</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.botonDetener} onPress={detenerLectura}>
+          <Text style={styles.botonDetenerTexto}>⏹️ Detener</Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.subtitle}>Historial</Text>
 
       <FlatList
@@ -167,12 +188,17 @@ const styles = StyleSheet.create({
   transcripcionBox: { backgroundColor: '#FFF', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#DDD', marginBottom: 15, minHeight: 80 },
   transcripcionLabel: { fontSize: 12, color: '#888', marginBottom: 5 },
   transcripcionTexto: { fontSize: 16, color: '#333' },
-  botonesVoz: { marginBottom: 25, gap: 10 },
+  botonesVoz: { marginBottom: 15, gap: 10 },
   botonMic: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 12, alignItems: 'center' },
   botonMicActivo: { backgroundColor: '#F44336' },
   botonMicTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 18 },
   botonProcesar: { backgroundColor: '#1976D2', padding: 15, borderRadius: 12, alignItems: 'center' },
   botonProcesarTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  botonesLectura: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  botonLeer: { flex: 1, backgroundColor: '#7B1FA2', padding: 12, borderRadius: 10, alignItems: 'center' },
+  botonLeerTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+  botonDetener: { flex: 1, backgroundColor: '#555', padding: 12, borderRadius: 10, alignItems: 'center' },
+  botonDetenerTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
   subtitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#333' },
   vacio: { textAlign: 'center', color: '#AAA', marginTop: 30, fontSize: 15 },
   card: { flexDirection: 'row', backgroundColor: '#FFF', padding: 15, borderRadius: 10, marginBottom: 10, alignItems: 'center', elevation: 2 },

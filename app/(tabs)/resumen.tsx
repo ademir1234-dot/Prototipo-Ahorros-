@@ -1,4 +1,5 @@
 import { useFocusEffect } from 'expo-router';
+import * as Speech from 'expo-speech';
 import React, { useCallback, useState } from 'react';
 import {
     Alert, FlatList, Modal,
@@ -43,6 +44,23 @@ export default function Resumen() {
     setResumen(resultado);
   };
 
+  const leerResumen = () => {
+    if (resumen.length === 0) {
+      Speech.speak('No hay miembros registrados aún.', { language: 'es-MX' });
+      return;
+    }
+    const texto = resumen.map(m =>
+      `${m.miembro}: ahorró ${m.ahorro.toFixed(2)} dólares, ` +
+      `tiene préstamo de ${m.prestamo.toFixed(2)} dólares, ` +
+      `con interés de ${m.interes.toFixed(2)} dólares. ` +
+      `Saldo neto: ${m.saldo.toFixed(2)} dólares.`
+    ).join(' Siguiente miembro. ');
+
+    Speech.speak(`Resumen de ${resumen.length} miembros. ${texto}`, { language: 'es-MX' });
+  };
+
+  const detenerLectura = () => Speech.stop();
+
   const abrirModalTasa = (miembro, tasaActual) => {
     setMiembroSeleccionado(miembro);
     setNuevaTasa(tasaActual.toString());
@@ -69,6 +87,16 @@ export default function Resumen() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>📊 Resumen de Miembros</Text>
+
+      {/* Botones de lectura en voz alta */}
+      <View style={styles.botonesLectura}>
+        <TouchableOpacity style={styles.botonLeer} onPress={leerResumen}>
+          <Text style={styles.botonLeerTexto}>🔊 Leer Resumen</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.botonDetener} onPress={detenerLectura}>
+          <Text style={styles.botonDetenerTexto}>⏹️ Detener</Text>
+        </TouchableOpacity>
+      </View>
 
       {resumen.length === 0 ? (
         <Text style={styles.vacio}>No hay transacciones registradas aún.</Text>
@@ -156,7 +184,12 @@ export default function Resumen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#F5F5F5', marginTop: 40 },
-  header: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#2E7D32' },
+  header: { fontSize: 26, fontWeight: 'bold', marginBottom: 15, textAlign: 'center', color: '#2E7D32' },
+  botonesLectura: { flexDirection: 'row', gap: 10, marginBottom: 15 },
+  botonLeer: { flex: 1, backgroundColor: '#7B1FA2', padding: 12, borderRadius: 10, alignItems: 'center' },
+  botonLeerTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+  botonDetener: { flex: 1, backgroundColor: '#555', padding: 12, borderRadius: 10, alignItems: 'center' },
+  botonDetenerTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
   vacio: { textAlign: 'center', color: '#AAA', marginTop: 50, fontSize: 16 },
   card: { backgroundColor: '#FFF', borderRadius: 12, padding: 15, marginBottom: 15, elevation: 3 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
