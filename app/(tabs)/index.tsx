@@ -29,6 +29,25 @@ export default function Index() {
     Speech.speak(`Tienes ${historial.length} transacciones. ${texto}`, { language: 'es-MX' });
   };
 
+  const leerHistorialMiembro = (miembro) => {
+    const registrosMiembro = historial.filter(item => normalizar(item.miembro) === normalizar(miembro));
+
+    if (registrosMiembro.length === 0) {
+      Speech.speak(`No hay transacciones registradas para ${miembro}.`, { language: 'es-MX' });
+      return;
+    }
+
+    const texto = registrosMiembro
+      .slice(0, 5)
+      .map(item => `${item.tipo} de ${item.monto} dólares del ${item.fecha}.`)
+      .join(' ');
+
+    Speech.speak(
+      `${miembro} tiene ${registrosMiembro.length} transacciones registradas. ${texto}`,
+      { language: 'es-MX' }
+    );
+  };
+
   const detenerLectura = () => Speech.stop();
 
   const iniciarEscucha = () => {
@@ -171,9 +190,15 @@ export default function Index() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.icon}>{obtenerIcono(item.tipo)}</Text>
-            <View>
+            <View style={styles.cardContenido}>
               <Text style={styles.cardTitle}>{item.miembro} • ${item.monto}</Text>
               <Text style={styles.cardSubtitle}>{item.tipo} - {item.fecha}</Text>
+              <TouchableOpacity
+                style={styles.botonLeerMiembro}
+                onPress={() => leerHistorialMiembro(item.miembro)}
+              >
+                <Text style={styles.botonLeerMiembroTexto}>🔊 Leer solo {item.miembro}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -203,6 +228,9 @@ const styles = StyleSheet.create({
   vacio: { textAlign: 'center', color: '#AAA', marginTop: 30, fontSize: 15 },
   card: { flexDirection: 'row', backgroundColor: '#FFF', padding: 15, borderRadius: 10, marginBottom: 10, alignItems: 'center', elevation: 2 },
   icon: { fontSize: 30, marginRight: 15 },
+  cardContenido: { flex: 1 },
   cardTitle: { fontSize: 18, fontWeight: 'bold' },
-  cardSubtitle: { fontSize: 14, color: '#666' }
+  cardSubtitle: { fontSize: 14, color: '#666', marginBottom: 8 },
+  botonLeerMiembro: { alignSelf: 'flex-start', backgroundColor: '#5E35B1', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
+  botonLeerMiembroTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 13 }
 });

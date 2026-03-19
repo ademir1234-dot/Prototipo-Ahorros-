@@ -59,6 +59,22 @@ export default function Resumen() {
     Speech.speak(`Resumen de ${resumen.length} miembros. ${texto}`, { language: 'es-MX' });
   };
 
+  const leerResumenMiembro = (miembro) => {
+    const datosMiembro = resumen.find(m => m.miembro === miembro);
+
+    if (!datosMiembro) {
+      Speech.speak(`No encontré datos para ${miembro}.`, { language: 'es-MX' });
+      return;
+    }
+
+    const texto = `${datosMiembro.miembro}: ahorró ${datosMiembro.ahorro.toFixed(2)} dólares, ` +
+      `tiene préstamo de ${datosMiembro.prestamo.toFixed(2)} dólares, ` +
+      `con interés de ${datosMiembro.interes.toFixed(2)} dólares. ` +
+      `Saldo neto: ${datosMiembro.saldo.toFixed(2)} dólares.`;
+
+    Speech.speak(texto, { language: 'es-MX' });
+  };
+
   const detenerLectura = () => Speech.stop();
 
   const abrirModalTasa = (miembro, tasaActual) => {
@@ -108,12 +124,20 @@ export default function Resumen() {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.nombre}>{item.miembro}</Text>
-                <TouchableOpacity
-                  style={styles.botonTasa}
-                  onPress={() => abrirModalTasa(item.miembro, item.tasa)}
-                >
-                  <Text style={styles.botonTasaTexto}>Tasa: {item.tasa}% ✏️</Text>
-                </TouchableOpacity>
+                <View style={styles.botonesCardHeader}>
+                  <TouchableOpacity
+                    style={styles.botonLeerMiembro}
+                    onPress={() => leerResumenMiembro(item.miembro)}
+                  >
+                    <Text style={styles.botonLeerMiembroTexto}>🔊 Leer</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.botonTasa}
+                    onPress={() => abrirModalTasa(item.miembro, item.tasa)}
+                  >
+                    <Text style={styles.botonTasaTexto}>Tasa: {item.tasa}% ✏️</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.fila}>
@@ -194,6 +218,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#FFF', borderRadius: 12, padding: 15, marginBottom: 15, elevation: 3 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   nombre: { fontSize: 20, fontWeight: 'bold', color: '#222' },
+  botonesCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  botonLeerMiembro: { backgroundColor: '#5E35B1', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  botonLeerMiembroTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
   botonTasa: { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   botonTasaTexto: { color: '#2E7D32', fontWeight: 'bold', fontSize: 13 },
   fila: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
